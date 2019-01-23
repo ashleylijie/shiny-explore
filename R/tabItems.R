@@ -7,8 +7,10 @@ user_verify_tab <- tabItem(
     ),    
     
     fluidRow(
-        column(3,
-               div(class = "span1",      
+        column(6,
+               div(class = "span1", 
+                   top = "auto", left = "auto", right = "auto", bottom = "auto",
+                   width = "auto", height = "auto",
                    uiOutput("obs")
                )
         ),
@@ -36,7 +38,7 @@ sublet_pricing_tab <- tabItem(
         sidebarLayout(
             
             # Sidebar panel for inputs ----
-            sidebarPanel(width = 2,
+            sidebarPanel(width = 3,
                          
                          # Input: Select a file ----
                          fileInput("file", "选择上传文件 ( *.xlsx ) :",
@@ -64,7 +66,7 @@ sublet_pricing_tab <- tabItem(
             ),
             
             # Main panel for displaying outputs ----
-            mainPanel(width = 10,
+            mainPanel(width = 9,
                       
                       verbatimTextOutput("value"),
                       tags$hr(),
@@ -101,11 +103,7 @@ community_std_price_tab <- tabItem(
                       h2("Community Standard Price"),
                       
                       selectInput("city", "City", choices = c("", toupper(city_list))),
-                      selectInput("area", "area", character(0)),
-                      
-                      
-                      plotlyOutput("hist_plot", height = 200),
-                      plotOutput("scatter_plot", height = 250)
+                      selectInput("area", "area", character(0))
         )
     )
 )
@@ -113,6 +111,39 @@ community_std_price_tab <- tabItem(
 
 # puzu_price
 puzu_price_tab <- tabItem(
-    tabName = "puzu_price"
+    tabName = "puzu_price",
+    fluidPage(
+      titlePanel("普租价计算"),
+      fluidRow(
+        column(width = 3, wellPanel(
+          selectInput("city_puzu", "城市", choices = c("", toupper(city_list))),
+          
+          numericInput("xiaoqu_id", "小区ID", 
+                       min = 1, max = Inf, value = NA, step = 1),
+          
+          sliderInput("bedroom_num", "室数 : ",
+                      min = 1, max = 10, value = 2, step = 1),
+          sliderInput("hall_num", "客厅数 : ",
+                      min = 0, max = 10, value = 1, step = 1),
+          sliderInput("toilet_num", "卫生间数 : ",
+                      min = 1, max = 10, value = 1, step = 1),
+          
+          numericInput("building_area", "房间面积", 80),
+          
+          # room_status : R1，精装；R2，简装，R3，毛坯'
+          # floor : L1，爬楼5层及以上；L2，爬楼一层，L3，正常楼层'
+          # enviorment_level : N1，安静卫生；N2，吵闹脏乱',
+          selectInput("has_floor", "楼层类型", choices = c("", "L1 : 爬楼5层及以上", "L2 : 爬楼一层", "L3 : 正常楼层")),
+          selectInput("decoration", "装修水平", choices = c("" ,"R1 : 精装", "R2 : 简装", "R3 : 毛坯")),
+          
+          br(),
+          actionButton("goButton_puzu", "计算价格")
+        )),
+        column(9,
+               h4("普租价"),
+               DT::dataTableOutput("puzu_price")
+        )
+      )
+    )
 )
 

@@ -1,0 +1,97 @@
+version: "3"
+
+services:
+
+    some-mongo:
+        image: mongo
+        restart: on-failure
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: mongo
+            MONGO_INITDB_ROOT_PASSWORD: mongo
+            MONGO_INITDB_DATABASE: admin
+        ports:
+            - 27017:27017
+        volumes:
+            - ${HOME}/some-mongo/data:/data/db
+    
+    
+    fengkong_house_pricing_api:
+        build: ../fengkong_house_pricing_api
+        image: fengkong_house_pricing_api:shiny
+        restart: on-failure
+#        ports:
+ #           - 12001:8899
+        volumes:
+            - ${HOME}/.Renviron:/root/.Renviron
+            - ../mdl_price:/mdl_price
+        command: ["Rscript", "--verbose", "plumber.R", "&"]
+
+
+    fengkong_house_pricing_api_shiny:
+        build: ../fengkong_house_pricing_api
+        image: fengkong_house_pricing_api:shiny
+        restart: on-failure
+        ports:
+            - 12002:8899
+        volumes:
+            - ${HOME}/.Renviron:/root/.Renviron
+            - ../mdl_price:/mdl_price
+        command: ["Rscript", "--verbose", "plumber.R", "&"]
+        
+    sublet_market_pricing_api:
+        build: ../sublet_market_pricing_api
+        image: sublet_market_pricing_api:shiny
+        restart: on-failure
+#        ports:
+ #           - 13001:8899
+        volumes:
+            - ${HOME}/.Renviron:/root/.Renviron
+            - ../mdl_price:/mdl_price
+        command: ["Rscript", "--verbose", "plumber.R", "&"]
+        
+    sublet_market_pricing_api_shiny:
+        build: ../sublet_market_pricing_api
+        image: sublet_market_pricing_api:shiny
+        restart: on-failure
+        ports:
+            - 13002:8899
+        volumes:
+            - ${HOME}/.Renviron:/root/.Renviron
+            - ../mdl_price:/mdl_price
+        command: ["Rscript", "--verbose", "plumber.R", "&"]
+        
+        
+    sublet_pricing_api:
+        build: ../sublet_pricing_api
+        image: sublet_pricing_api:shiny
+        restart: on-failure
+        ports:
+            - 8899:8899
+        volumes:
+            - ../mdl_price:/mdl_price
+            - ${HOME}/.Renviron:/root/.Renviron
+        command: ["Rscript", "--verbose", "plumber.R", "&"]
+        
+        
+    sublet_pricing_web:
+        build: .
+        image: sublet_pricing_web:shiny
+        restart: on-failure
+        volumes:
+            - .:/srv/shiny-server/sublet_pricing
+            - ${HOME}/.Renviron:/srv/shiny-server/sublet_pricing/.Renviron
+        ports:
+            - 3939:3838
+
+    seed-mongo:
+        build: ./Seed-Mongo
+        image: shiny_users:shiny
+        environment:
+            WAIT_HOSTS: some-mongo:27017
+        command: ["sh", "insert_users.sh"]
+     
+     
+networks:
+    default:
+        external:
+          name: shiny

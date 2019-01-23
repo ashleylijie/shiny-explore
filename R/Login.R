@@ -1,28 +1,29 @@
-PASSWORD <- data.frame(
-    Brukernavn = c("lijie","gil"), 
-    Passord = c("bi_lijie","1234")
-)
+
 
 output$uiLogin <- renderUI({
-    if (USER$Logged == FALSE) {
-        wellPanel(
-            textInput("userName", "User Name:"),
-            passwordInput("passwd", "Pass word:"),
-            br(),
-            actionButton("Login", "Log in")
-        )
+  
+    if (!USER$Logged) {
+      
+      bootstrapPage(
+        titlePanel("用户登录"),
+        
+        textInput("userName", "Username : "),
+        passwordInput("passwd", "Password : "),
+        br(),
+        actionButton("Login", "Log in"))
+        
     }
 })
 
 output$pass <- renderText({  
-    if (USER$Logged == FALSE) {
+    if (!USER$Logged) {
         USER$pass
     }  
 })
 
 # Login info during session ----
 output$userPanel <- renderUI({
-    if (USER$Logged == TRUE) {
+    if (USER$Logged) {
         fluidRow(
             column(2,
                    "User: ", USER$name
@@ -36,15 +37,18 @@ output$userPanel <- renderUI({
 observeEvent(input$Login , {
     Username <- isolate(input$userName)
     Password <- isolate(input$passwd)
-    Id.username <- which(PASSWORD$Brukernavn == Username)
-    Id.password <- which(PASSWORD$Passord    == Password)
-    if (length(Id.username) > 0 & length(Id.password) > 0) {
-        if (Id.username == Id.password) {
-            USER$Logged <- TRUE
-            USER$name <- Username      
-        } 
-    } else {
-        USER$pass <- "User name or password failed!"
+    
+    user_info <- user_verify(Username, Password)
+    
+    if (nrow(user_info) > 0) {
+      
+      USER$Logged <- TRUE
+      USER$name <- Username      
+
+      } else {
+        
+        USER$pass <- "User or Password verification failed."
+      
     }
 })
 
