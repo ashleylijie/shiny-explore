@@ -1,0 +1,56 @@
+FROM dkbi:dev
+
+# Install Ubuntu dependencies
+RUN apt-get update && apt-get install -y \
+    sudo \
+    gdebi-core \
+    pandoc \
+    pandoc-citeproc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \
+    libssl-dev \
+    gsl-bin \
+    libgsl0-dev \
+    libproj-dev \
+    libgdal-dev \
+    libudunits2-dev
+
+
+# Copy from host to avoid download
+COPY shiny-server.deb .
+
+#  Install Shiny server
+RUN gdebi -n shiny-server.deb && \
+    rm -f shiny-server.deb && \
+    R -e "install.packages(c('shiny', 'shinydashboard', 'dplyr'), repos = 'http://mirrors.tuna.tsinghua.edu.cn/CRAN/')" && \
+    cp -R /usr/local/lib/R/site-library/shiny/examples/* /srv/shiny-server/ && \
+    rm -rf /var/lib/apt/lists/* 
+
+# Install R Packages
+RUN install2.r --error \
+    # install dependencies
+    --deps TRUE \
+    # switch to TUNA mirror
+    -r "http://mirrors.tuna.tsinghua.edu.cn/CRAN/" \
+    DT \
+    shinythemes \
+    RColorBrewer \
+    leaflet
+
+
+# Shell script to start Shiny
+COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY shiny-server.sh /usr/bin/shiny-server.sh
+
+
+RUN printf 'common.secret = "some_secret"\n\
+consul.host = "consul.danke.life"\n\
+consul.port = "8500"\n\
+consul.swagger = "v1/kv"' > .Renviron
+
+# Default port for Shiny server
+EXPOSE 3838
+
+# Start Shiny
+CMD ["/usr/bin/shiny-server.sh"]
